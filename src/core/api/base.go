@@ -167,6 +167,10 @@ func Init() error {
 	if err := initChartController(); err != nil {
 		return err
 	}
+	//init csar controller
+	if err := initCsarController(); err != nil {
+		return err
+	}
 
 	p2pPreheatCallbackFun := func(ctx context.Context, p string) error {
 		param := &preheat.TriggerParam{}
@@ -193,5 +197,14 @@ func initChartController() error {
 	}
 
 	chartController = chartCtl
+	return nil
+}
+
+func initCsarController() error {
+	csarCtl, err := initializeCsarController()
+	if err != nil {
+		return err
+	}
+	csarController = csarCtl
 	return nil
 }
