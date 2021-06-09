@@ -73,6 +73,15 @@ type ChartRegistry interface {
 	DeleteChart(name, version string) error
 }
 
+// CsarRegistry defines the capabilities that a csar registry should have
+type CsarRegistry interface {
+	FetchCsar(filters []*model.Filter) ([]*model.Resource, error)
+	CsarExist(name string) (bool, error)
+	DownloadCsar(name string) (io.ReadCloser, error)
+	UploadCsar(name string, csar io.Reader) error
+	DeleteCsar(name string) error
+}
+
 // RegisterFactory registers one adapter factory to the registry
 func RegisterFactory(t model.RegistryType, factory Factory) error {
 	if len(t) == 0 {

@@ -13,6 +13,7 @@ import (
 	hlog "github.com/goharbor/harbor/src/lib/log"
 	"github.com/goharbor/harbor/src/server/middleware/orm"
 	"net/url"
+	"os"
 	"strings"
 )
 
@@ -91,9 +92,19 @@ func (csar *CsarRepositoryAPI) requireNamespace() bool {
 	return true
 }
 
+const defaultCsarEndPoint = "http://192.168.182.133:8848"
+
+func GetCsarEndPoint() string {
+	endpoint := os.Getenv("CSAR_ENDPOINT")
+	if endpoint == "" {
+		return defaultCsarEndPoint
+	}
+	return endpoint
+}
+
 // Initialize the chart service controller
 func initializeCsarController() (*csar.Controller, error) {
-	csarEndPoint := "http://192.168.182.133:8848"
+	csarEndPoint := GetCsarEndPoint()
 	csarEndPoint = strings.TrimSuffix(csarEndPoint, "/")
 	url, err := url.Parse(csarEndPoint)
 	if err != nil {

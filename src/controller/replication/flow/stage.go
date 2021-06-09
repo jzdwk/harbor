@@ -67,6 +67,9 @@ func fetchResources(adapter adp.Adapter, policy *model.Policy) ([]*model.Resourc
 		resTypes = append(resTypes, info.SupportedResourceTypes...)
 	}
 
+	//default csar always true
+	fetchCsar := true
+
 	fetchArtifact := false
 	fetchChart := false
 	for _, resType := range resTypes {
@@ -103,6 +106,19 @@ func fetchResources(adapter adp.Adapter, policy *model.Policy) ([]*model.Resourc
 		}
 		resources = append(resources, res...)
 		log.Debug("fetch charts completed")
+	}
+	//csar todo fetch flag
+	if fetchCsar {
+		reg, ok := adapter.(adp.CsarRegistry)
+		if !ok {
+			return nil, fmt.Errorf("the adapter doesn't implement the CasrRegistry interface")
+		}
+		res, err := reg.FetchCsar(policy.Filters)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch csars: %v", err)
+		}
+		resources = append(resources, res...)
+		log.Debug("fetch csars completed")
 	}
 
 	log.Debug("fetch resources from the source registry completed")

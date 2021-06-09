@@ -19,6 +19,7 @@ const (
 	ResourceTypeArtifact ResourceType = "artifact"
 	ResourceTypeImage    ResourceType = "image"
 	ResourceTypeChart    ResourceType = "chart"
+	ResourceTypeCsar     ResourceType = "csar"
 )
 
 // ResourceType represents the type of the resource
