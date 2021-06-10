@@ -52,7 +52,7 @@ func (bc *basicController) LaunchJob(req *job.Request) (res *job.Stats, err erro
 		return nil, errs.BadRequestError(err)
 	}
 
-	// Validate job name
+	// Validate job name, such as replication
 	jobType, isKnownJob := bc.backendWorker.IsKnownJob(req.Job.Name)
 	if !isKnownJob {
 		return nil, errs.BadRequestError(errors.Errorf("job with name '%s' is unknown", req.Job.Name))
