@@ -24,10 +24,6 @@ type csarDetail struct {
 	Labels  []*label `json:"labels"`
 }
 
-type csarMetadata struct {
-	Metadata interface{} `json:"metadata"`
-}
-
 func (a *Adapter) FetchCsar(filters []*model.Filter) ([]*model.Resource, error) {
 	projects, err := a.ListProjects(filters)
 	if err != nil {
@@ -78,14 +74,15 @@ func (a *Adapter) FetchCsar(filters []*model.Filter) ([]*model.Resource, error) 
 				Tags:   []string{detail.Version},
 				Labels: labels,
 			})
+			//todo, if csar has version or tag
 			//filter, filter lable,tag,resource, do nothing
-			artifacts, err = filter.DoFilterArtifacts(artifacts, filters)
+			/*artifacts, err = filter.DoFilterArtifacts(artifacts, filters)
 			if err != nil {
 				return nil, err
 			}
 			if len(artifacts) == 0 {
 				continue
-			}
+			}*/
 
 			for _, artifact := range artifacts {
 				resources = append(resources, &model.Resource{
@@ -185,7 +182,7 @@ func (a *Adapter) UploadCsar(name string, csar io.Reader) error {
 }
 func (a *Adapter) DeleteCsar(name string) error {
 	project, csarName := utils.ParseRepository(name)
-	url := fmt.Sprintf("%s/api/csarrepo/%s/csars/%s/%s", a.Client.GetURL(), project, csarName)
+	url := fmt.Sprintf("%s/api/csarrepo/%s/csars/%s", a.Client.GetURL(), project, csarName)
 	return a.httpClient.Delete(url)
 }
 

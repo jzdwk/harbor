@@ -17,8 +17,6 @@ import (
 	"strings"
 )
 
-const csarUploadingEndpoint = "/api/csar"
-
 // chartController is a singleton instance
 var csarController *csar.Controller
 
@@ -43,22 +41,13 @@ type CsarRepositoryAPI struct {
 func (csar *CsarRepositoryAPI) Prepare() {
 	// Call super prepare method
 	csar.BaseController.Prepare()
-
-	// Check the existence of namespace
-	incomingURI := csar.Ctx.Request.URL.Path
-	if incomingURI == csarUploadingEndpoint {
-		// Forward to the default repository
-		csar.namespace = defaultRepo
-		hlog.Info("setting csar controller namespace  %v", csar.namespace)
-	} else {
-		// Try to extract namespace for parameter of path
-		// It may not exist
-		csar.namespace = strings.TrimSpace(csar.GetStringFromPath(namespaceParam))
-		if !csar.requireNamespace() {
-			hlog.Error("csar controller namespace does not exist, namespace: %v", csar.namespace)
-		}
-		hlog.Info("setting csar controller namespace  %v", csar.namespace)
+	// Try to extract namespace for parameter of path
+	// It may not exist
+	csar.namespace = strings.TrimSpace(csar.GetStringFromPath(namespaceParam))
+	if !csar.requireNamespace() {
+		hlog.Error("csar controller namespace does not exist, namespace: %v", csar.namespace)
 	}
+	hlog.Info("setting csar controller namespace  %v", csar.namespace)
 
 	// Init label manager
 	csar.labelManager = &label.BaseManager{}
@@ -92,7 +81,7 @@ func (csar *CsarRepositoryAPI) requireNamespace() bool {
 	return true
 }
 
-const defaultCsarEndPoint = "http://192.168.182.133:8848"
+const defaultCsarEndPoint = "http://192.168.182.133:8070"
 
 func GetCsarEndPoint() string {
 	endpoint := os.Getenv("CSAR_ENDPOINT")
@@ -119,19 +108,17 @@ func initializeCsarController() (*csar.Controller, error) {
 	return controller, nil
 }
 
-// GetHealthStatus handles GET /api/csar/health
-func (csar *CsarRepositoryAPI) Test() {
+//reserve proxy
+func (csar *CsarRepositoryAPI) Proxy() {
 	// Check access
 	if !csar.SecurityCtx.IsAuthenticated() {
 		csar.SendUnAuthorizedError(errors.New("Unauthorized"))
 		return
 	}
-
 	if !csar.SecurityCtx.IsSysAdmin() {
 		csar.SendForbiddenError(errors.New(csar.SecurityCtx.GetUsername()))
 		return
 	}
-
 	// Directly proxy to the backend
 	csarController.ProxyTraffic(csar.Ctx.ResponseWriter, csar.Ctx.Request)
 }
