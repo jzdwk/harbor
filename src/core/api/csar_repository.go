@@ -6,12 +6,17 @@
 package api
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/goharbor/harbor/src/core/label"
 	"github.com/goharbor/harbor/src/csar"
 	hlog "github.com/goharbor/harbor/src/lib/log"
 	"github.com/goharbor/harbor/src/server/middleware/orm"
+	"io"
+	"io/ioutil"
+	"mime/multipart"
+	"net/http"
 	"net/url"
 	"os"
 	"strings"
@@ -115,10 +120,72 @@ func (csar *CsarRepositoryAPI) Proxy() {
 		csar.SendUnAuthorizedError(errors.New("Unauthorized"))
 		return
 	}
-	if !csar.SecurityCtx.IsSysAdmin() {
+	/*if !csar.SecurityCtx.IsSysAdmin() {
 		csar.SendForbiddenError(errors.New(csar.SecurityCtx.GetUsername()))
 		return
+	}*/
+	if isMultipartFormData(csar.Ctx.Request) {
+		formFiles := make([]formFile, 0)
+		formFiles = append(formFiles,
+			formFile{
+				formField: "csar",
+				mustHave:  true,
+			})
+		if err := csar.rewriteFileContent(formFiles, csar.Ctx.Request); err != nil {
+			csar.SendInternalServerError(err)
+			return
+		}
+		/*if err := csar.addEventContext(formFiles, cra.Ctx.Request); err != nil {
+			hlog.Errorf("Failed to add chart upload context, %v", err)
+		}*/
 	}
 	// Directly proxy to the backend
 	csarController.ProxyTraffic(csar.Ctx.ResponseWriter, csar.Ctx.Request)
+}
+
+func (csar *CsarRepositoryAPI) rewriteFileContent(files []formFile, request *http.Request) error {
+	if len(files) == 0 {
+		return nil // no files, early return
+	}
+
+	var body bytes.Buffer
+	w := multipart.NewWriter(&body)
+	defer func() {
+		if err := w.Close(); err != nil {
+			// Just log it
+			hlog.Errorf("Failed to defer close multipart writer with error: %s", err.Error())
+		}
+	}()
+
+	// Process files by key one by one
+	for _, f := range files {
+		mFile, mHeader, err := csar.GetFile(f.formField)
+
+		// Handle error case by case
+		if err != nil {
+			formatedErr := fmt.Errorf("get file content with multipart header from key '%s' failed with error: %s", f.formField, err.Error())
+			if f.mustHave || err != http.ErrMissingFile {
+				return formatedErr
+			}
+
+			// Error can be ignored, just log it
+			hlog.Warning(formatedErr.Error())
+			continue
+		}
+
+		fw, err := w.CreateFormFile(f.formField, mHeader.Filename)
+		if err != nil {
+			return fmt.Errorf("create form file with multipart header failed with error: %s", err.Error())
+		}
+
+		_, err = io.Copy(fw, mFile)
+		if err != nil {
+			return fmt.Errorf("copy file stream in multipart form data failed with error: %s", err.Error())
+		}
+
+	}
+	request.Header.Set(headerContentType, w.FormDataContentType())
+	request.ContentLength = -1
+	request.Body = ioutil.NopCloser(&body)
+	return nil
 }

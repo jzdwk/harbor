@@ -120,7 +120,7 @@ func (a *Adapter) DownloadCsar(name string) (io.ReadCloser, error) {
 		return nil, err
 	}
 	if info.Version == "" {
-		return nil, fmt.Errorf("cannot got the download url for csar %s:%s", name)
+		return nil, fmt.Errorf("cannot got the download url for csar %s", name)
 	}
 	//todo get download url
 	project, csarName := utils.ParseRepository(name)
@@ -189,6 +189,8 @@ func (a *Adapter) DeleteCsar(name string) error {
 func (a *Adapter) getCsarInfo(name string) (*csarDetail, error) {
 	project, csarName := utils.ParseRepository(name)
 	url := fmt.Sprintf("%s/api/csarrepo/%s/csars/%s", a.Client.GetURL(), project, csarName)
+	//url := fmt.Sprintf("%s/api/csarrepo/%s/csars/%s", "http://192.168.182.133:8070", project, csarName)
+
 	info := &csarDetail{}
 	if err := a.httpClient.Get(url, info); err != nil {
 		return nil, err

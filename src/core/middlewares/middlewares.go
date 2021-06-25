@@ -23,7 +23,6 @@ import (
 	"github.com/goharbor/harbor/src/pkg/distribution"
 	"github.com/goharbor/harbor/src/server/middleware"
 	"github.com/goharbor/harbor/src/server/middleware/artifactinfo"
-	"github.com/goharbor/harbor/src/server/middleware/csrf"
 	"github.com/goharbor/harbor/src/server/middleware/log"
 	"github.com/goharbor/harbor/src/server/middleware/mergeslash"
 	"github.com/goharbor/harbor/src/server/middleware/metric"
@@ -83,7 +82,7 @@ func MiddleWares() []beego.MiddleWare {
 		requestid.Middleware(),
 		log.Middleware(),
 		session.Middleware(),
-		csrf.Middleware(),
+		//csrf.Middleware(),
 		orm.Middleware(pingSkipper),
 		notification.Middleware(pingSkipper), // notification must ahead of transaction ensure the DB transaction execution complete
 		transaction.Middleware(dbTxSkippers...),

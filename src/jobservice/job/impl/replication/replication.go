@@ -24,6 +24,8 @@ import (
 
 	// import chart transfer
 	_ "github.com/goharbor/harbor/src/replication/transfer/chart"
+	// import csar transfer
+	_ "github.com/goharbor/harbor/src/replication/transfer/csar"
 	// import image transfer
 	_ "github.com/goharbor/harbor/src/replication/transfer/image"
 	// register the Harbor adapter

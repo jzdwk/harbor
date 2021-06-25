@@ -137,6 +137,7 @@ func (c *Client) BasePath() string {
 
 // GetURL returns the URL of the registry that the client is for
 func (c *Client) GetURL() string {
+	//return "http://192.168.182.133:8070"
 	if !isLocalHarbor(c.URL) || !isInCore() {
 		return c.URL
 	}
