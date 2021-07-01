@@ -15,6 +15,7 @@
 package middleware
 
 import (
+	"github.com/goharbor/harbor/src/lib/log"
 	"net/http"
 
 	"github.com/goharbor/harbor/src/lib"
@@ -49,6 +50,7 @@ func New(fn func(http.ResponseWriter, *http.Request, http.Handler), skippers ...
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			for _, skipper := range skippers {
 				if skipper(r) {
+					log.Info("skip request path %s", r.URL.Path)
 					next.ServeHTTP(w, r)
 					return
 				}

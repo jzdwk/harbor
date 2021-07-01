@@ -39,6 +39,7 @@ const (
 	ResourceHelmChart             = Resource("helm-chart")
 	ResourceHelmChartVersion      = Resource("helm-chart-version")
 	ResourceHelmChartVersionLabel = Resource("helm-chart-version-label")
+	ResourceCsar                  = Resource("csar")
 	ResourceLabel                 = Resource("label")
 	ResourceLog                   = Resource("log")
 	ResourceMember                = Resource("member")

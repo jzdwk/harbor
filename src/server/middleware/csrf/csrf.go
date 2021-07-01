@@ -72,6 +72,7 @@ func Middleware() func(handler http.Handler) http.Handler {
 // csrfSkipper makes sure only some of the uris accessed by non-UI client can skip the csrf check
 func csrfSkipper(req *http.Request) bool {
 	path := req.URL.Path
+	log.Info("get request from skipper, path %s", path)
 	if (strings.HasPrefix(path, "/v2/") ||
 		strings.HasPrefix(path, "/api/") ||
 		strings.HasPrefix(path, "/chartrepo/") ||

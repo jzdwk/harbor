@@ -84,7 +84,7 @@ func (b *BaseController) HasProjectPermission(projectIDOrName interface{}, actio
 	if err != nil {
 		return false, err
 	}
-
+	//resource = project/{projectId}/{subResource}
 	resource := rbac_project.NewNamespace(project.ProjectID).Resource(subresource...)
 	if !b.SecurityCtx.Can(b.Context(), action, resource) {
 		return false, nil

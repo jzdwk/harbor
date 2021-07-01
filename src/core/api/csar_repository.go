@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/goharbor/harbor/src/common/rbac"
 	"github.com/goharbor/harbor/src/core/label"
 	"github.com/goharbor/harbor/src/csar"
 	hlog "github.com/goharbor/harbor/src/lib/log"
@@ -113,17 +114,29 @@ func initializeCsarController() (*csar.Controller, error) {
 	return controller, nil
 }
 
-//reserve proxy
-func (csar *CsarRepositoryAPI) Proxy() {
+func (csar *CsarRepositoryAPI) requireAccess(action rbac.Action, subresource ...rbac.Resource) bool {
+	if len(subresource) == 0 {
+		subresource = append(subresource, rbac.ResourceCsar)
+	}
+
+	return csar.RequireProjectAccess(csar.namespace, action, subresource...)
+}
+
+func (csar *CsarRepositoryAPI) Upload() {
+	hlog.Debugf("Header of request of uploading csar: %#v, content-len=%d", csar.Ctx.Request.Header, csar.Ctx.Request.ContentLength)
+
 	// Check access
 	if !csar.SecurityCtx.IsAuthenticated() {
 		csar.SendUnAuthorizedError(errors.New("Unauthorized"))
 		return
 	}
-	/*if !csar.SecurityCtx.IsSysAdmin() {
-		csar.SendForbiddenError(errors.New(csar.SecurityCtx.GetUsername()))
+
+	// Check access
+	if !csar.requireAccess(rbac.ActionCreate, rbac.ResourceCsar) {
 		return
-	}*/
+	}
+
+	// Rewrite file content if the content type is "multipart/form-data"
 	if isMultipartFormData(csar.Ctx.Request) {
 		formFiles := make([]formFile, 0)
 		formFiles = append(formFiles,
@@ -138,6 +151,67 @@ func (csar *CsarRepositoryAPI) Proxy() {
 		/*if err := csar.addEventContext(formFiles, cra.Ctx.Request); err != nil {
 			hlog.Errorf("Failed to add chart upload context, %v", err)
 		}*/
+	}
+
+	// Directly proxy to the backend
+	csarController.ProxyTraffic(csar.Ctx.ResponseWriter, csar.Ctx.Request)
+}
+
+func (csar *CsarRepositoryAPI) Get() {
+	hlog.Infof("get request from get detail api")
+	// Check access
+	if !csar.SecurityCtx.IsAuthenticated() {
+		csar.SendUnAuthorizedError(errors.New("Unauthorized"))
+		return
+	}
+	// Check access
+	if !csar.requireAccess(rbac.ActionRead, rbac.ResourceCsar) {
+		return
+	}
+	// Directly proxy to the backend
+	csarController.ProxyTraffic(csar.Ctx.ResponseWriter, csar.Ctx.Request)
+}
+
+func (csar *CsarRepositoryAPI) List() {
+	hlog.Infof("get request from get list api")
+	// Check access
+	if !csar.SecurityCtx.IsAuthenticated() {
+		csar.SendUnAuthorizedError(errors.New("Unauthorized"))
+		return
+	}
+	// Check access
+	if !csar.requireAccess(rbac.ActionList, rbac.ResourceCsar) {
+		return
+	}
+	// Directly proxy to the backend
+	csarController.ProxyTraffic(csar.Ctx.ResponseWriter, csar.Ctx.Request)
+}
+
+func (csar *CsarRepositoryAPI) Delete() {
+	hlog.Infof("get request from delete api")
+	// Check access
+	if !csar.SecurityCtx.IsAuthenticated() {
+		csar.SendUnAuthorizedError(errors.New("Unauthorized"))
+		return
+	}
+	// Check access
+	if !csar.requireAccess(rbac.ActionDelete, rbac.ResourceCsar) {
+		return
+	}
+	// Directly proxy to the backend
+	csarController.ProxyTraffic(csar.Ctx.ResponseWriter, csar.Ctx.Request)
+}
+
+func (csar *CsarRepositoryAPI) Download() {
+	hlog.Infof("get request from download api")
+	// Check access
+	if !csar.SecurityCtx.IsAuthenticated() {
+		csar.SendUnAuthorizedError(errors.New("Unauthorized"))
+		return
+	}
+	// Check access
+	if !csar.requireAccess(rbac.ActionRead, rbac.ResourceCsar) {
+		return
 	}
 	// Directly proxy to the backend
 	csarController.ProxyTraffic(csar.Ctx.ResponseWriter, csar.Ctx.Request)

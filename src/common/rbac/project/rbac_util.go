@@ -33,6 +33,9 @@ var (
 		{Resource: rbac.ResourceHelmChart, Action: rbac.ActionRead},
 		{Resource: rbac.ResourceHelmChart, Action: rbac.ActionList},
 
+		{Resource: rbac.ResourceCsar, Action: rbac.ActionRead},
+		{Resource: rbac.ResourceCsar, Action: rbac.ActionList},
+
 		{Resource: rbac.ResourceHelmChartVersion, Action: rbac.ActionRead},
 		{Resource: rbac.ResourceHelmChartVersion, Action: rbac.ActionList},
 

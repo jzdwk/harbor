@@ -62,7 +62,10 @@ func registerRoutes() {
 	beego.Router("/service/token", &token.Handler{})
 
 	//self-define csar server
-	beego.Router("/api/csarrepo/:repo/*", &api.CsarRepositoryAPI{}, "*:Proxy")
+	beego.Router("/api/csarrepo/:repo/csars/:csar", &api.CsarRepositoryAPI{}, "get:Get;delete:Delete")
+	beego.Router("/api/csarrepo/:repo/csars", &api.CsarRepositoryAPI{}, "get:List")
+	beego.Router("/api/csarrepo/:repo/csars", &api.CsarRepositoryAPI{}, "post:Upload")
+	beego.Router("/api/csarrepo/:repo/csars/:csar/download", &api.CsarRepositoryAPI{}, "get:Download")
 	// chart repository services
 	if config.WithChartMuseum() {
 		chartRepositoryAPIType := &api.ChartRepositoryAPI{}

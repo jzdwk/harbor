@@ -73,6 +73,11 @@ var (
 			{Resource: rbac.ResourceHelmChart, Action: rbac.ActionDelete},
 			{Resource: rbac.ResourceHelmChart, Action: rbac.ActionList},
 
+			{Resource: rbac.ResourceCsar, Action: rbac.ActionCreate},
+			{Resource: rbac.ResourceCsar, Action: rbac.ActionRead}, //download or get detail
+			{Resource: rbac.ResourceCsar, Action: rbac.ActionDelete},
+			{Resource: rbac.ResourceCsar, Action: rbac.ActionList},
+
 			{Resource: rbac.ResourceHelmChartVersion, Action: rbac.ActionCreate}, // upload helm chart version
 			{Resource: rbac.ResourceHelmChartVersion, Action: rbac.ActionRead},   // read and download helm chart version
 			{Resource: rbac.ResourceHelmChartVersion, Action: rbac.ActionDelete},
@@ -168,6 +173,11 @@ var (
 			{Resource: rbac.ResourceHelmChart, Action: rbac.ActionDelete},
 			{Resource: rbac.ResourceHelmChart, Action: rbac.ActionList},
 
+			{Resource: rbac.ResourceCsar, Action: rbac.ActionCreate},
+			{Resource: rbac.ResourceCsar, Action: rbac.ActionRead}, //download or get detail
+			{Resource: rbac.ResourceCsar, Action: rbac.ActionDelete},
+			{Resource: rbac.ResourceCsar, Action: rbac.ActionList},
+
 			{Resource: rbac.ResourceHelmChartVersion, Action: rbac.ActionCreate},
 			{Resource: rbac.ResourceHelmChartVersion, Action: rbac.ActionRead},
 			{Resource: rbac.ResourceHelmChartVersion, Action: rbac.ActionDelete},
@@ -226,6 +236,10 @@ var (
 			{Resource: rbac.ResourceHelmChart, Action: rbac.ActionRead},
 			{Resource: rbac.ResourceHelmChart, Action: rbac.ActionList},
 
+			{Resource: rbac.ResourceCsar, Action: rbac.ActionCreate},
+			{Resource: rbac.ResourceCsar, Action: rbac.ActionRead}, //download or get detail
+			{Resource: rbac.ResourceCsar, Action: rbac.ActionList},
+
 			{Resource: rbac.ResourceHelmChartVersion, Action: rbac.ActionCreate},
 			{Resource: rbac.ResourceHelmChartVersion, Action: rbac.ActionRead},
 			{Resource: rbac.ResourceHelmChartVersion, Action: rbac.ActionList},
@@ -274,6 +288,9 @@ var (
 			{Resource: rbac.ResourceHelmChart, Action: rbac.ActionRead},
 			{Resource: rbac.ResourceHelmChart, Action: rbac.ActionList},
 
+			{Resource: rbac.ResourceCsar, Action: rbac.ActionRead}, //download or get detail
+			{Resource: rbac.ResourceCsar, Action: rbac.ActionList},
+
 			{Resource: rbac.ResourceHelmChartVersion, Action: rbac.ActionRead},
 			{Resource: rbac.ResourceHelmChartVersion, Action: rbac.ActionList},
 
@@ -303,6 +320,9 @@ var (
 
 			{Resource: rbac.ResourceHelmChart, Action: rbac.ActionRead},
 			{Resource: rbac.ResourceHelmChart, Action: rbac.ActionList},
+
+			{Resource: rbac.ResourceCsar, Action: rbac.ActionRead}, //download or get detail
+			{Resource: rbac.ResourceCsar, Action: rbac.ActionList},
 
 			{Resource: rbac.ResourceHelmChartVersion, Action: rbac.ActionRead},
 			{Resource: rbac.ResourceHelmChartVersion, Action: rbac.ActionList},
