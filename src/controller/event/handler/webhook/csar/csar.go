@@ -36,7 +36,7 @@ func (csh *Handler) Handle(value interface{}) error {
 		return errors.New("invalid csar event type")
 	}
 
-	if csarEvent == nil || len(csarEvent.Versions) == 0 || len(csarEvent.ProjectName) == 0 || len(csarEvent.CsarName) == 0 {
+	if csarEvent == nil || len(csarEvent.ProjectName) == 0 || len(csarEvent.CsarName) == 0 {
 		return fmt.Errorf("data miss in csar event: %v", csarEvent)
 	}
 
@@ -80,7 +80,6 @@ func constructCsarPayload(event *event.CsarEvent, project *models.Project) (*mod
 	if project.IsPublic() {
 		repoType = models.ProjectPublic
 	}
-
 	payload := &model.Payload{
 		Type:    event.EventType,
 		OccurAt: event.OccurAt.Unix(),
@@ -94,19 +93,15 @@ func constructCsarPayload(event *event.CsarEvent, project *models.Project) (*mod
 		},
 		Operator: event.Operator,
 	}
-
 	extURL, err := config.ExtEndpoint()
 	if err != nil {
 		return nil, fmt.Errorf("get external endpoint failed: %v", err)
 	}
-
 	resourcePrefix := fmt.Sprintf("/api/%s/csarrepo/%s/csars/%s", extURL, event.ProjectName, event.CsarName)
-	for _, v := range event.Versions {
-		resource := &model.Resource{
-			Tag:         v,
-			ResourceURL: resourcePrefix,
-		}
-		payload.EventData.Resources = append(payload.EventData.Resources, resource)
+	resource := &model.Resource{
+		ResourceURL: resourcePrefix,
 	}
+	payload.EventData.Resources = append(payload.EventData.Resources, resource)
+
 	return payload, nil
 }
