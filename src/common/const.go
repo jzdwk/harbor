@@ -152,6 +152,10 @@ const (
 	ChartUploadCtxKey   = contextKey("chart_upload_event")
 	ChartDownloadCtxKey = contextKey("chart_download_event")
 
+	CsarUploadCtxKey   = contextKey("csar_upload_event")
+	CsarDownloadCtxKey = contextKey("csar_download_event")
+	CsarDeleteCtxKey   = contextKey("csar_delete_event")
+
 	// Global notification enable configuration
 	NotificationEnable = "notification_enable"
 

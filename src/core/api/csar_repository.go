@@ -7,12 +7,17 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
+	"github.com/goharbor/harbor/src/common"
 	"github.com/goharbor/harbor/src/common/rbac"
+	"github.com/goharbor/harbor/src/controller/event/metadata"
 	"github.com/goharbor/harbor/src/core/label"
 	"github.com/goharbor/harbor/src/csar"
 	hlog "github.com/goharbor/harbor/src/lib/log"
+	rep_event "github.com/goharbor/harbor/src/replication/event"
+	"github.com/goharbor/harbor/src/replication/model"
 	"github.com/goharbor/harbor/src/server/middleware/orm"
 	"io"
 	"io/ioutil"
@@ -20,7 +25,9 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 )
 
 // chartController is a singleton instance
@@ -97,6 +104,16 @@ func GetCsarEndPoint() string {
 	return endpoint
 }
 
+// formFile is used to represent the uploaded files in the form
+type csarFormFile struct {
+	// form field key contains the form file
+	formField string
+	version   string
+	// flag to indicate if the file identified by the 'formField'
+	// must exist
+	mustHave bool
+}
+
 // Initialize the chart service controller
 func initializeCsarController() (*csar.Controller, error) {
 	csarEndPoint := GetCsarEndPoint()
@@ -124,7 +141,8 @@ func (csar *CsarRepositoryAPI) requireAccess(action rbac.Action, subresource ...
 
 func (csar *CsarRepositoryAPI) Upload() {
 	hlog.Debugf("Header of request of uploading csar: %#v, content-len=%d", csar.Ctx.Request.Header, csar.Ctx.Request.ContentLength)
-
+	//todo dose csar version necessary
+	version := csar.GetString("version")
 	// Check access
 	if !csar.SecurityCtx.IsAuthenticated() {
 		csar.SendUnAuthorizedError(errors.New("Unauthorized"))
@@ -138,23 +156,89 @@ func (csar *CsarRepositoryAPI) Upload() {
 
 	// Rewrite file content if the content type is "multipart/form-data"
 	if isMultipartFormData(csar.Ctx.Request) {
-		formFiles := make([]formFile, 0)
+		formFiles := make([]csarFormFile, 0)
 		formFiles = append(formFiles,
-			formFile{
+			csarFormFile{
 				formField: "csar",
+				version:   version,
 				mustHave:  true,
 			})
 		if err := csar.rewriteFileContent(formFiles, csar.Ctx.Request); err != nil {
 			csar.SendInternalServerError(err)
 			return
 		}
-		/*if err := csar.addEventContext(formFiles, cra.Ctx.Request); err != nil {
+		//add web hook event if necessary
+		if err := csar.addUploadEventContext(formFiles, csar.Ctx.Request); err != nil {
 			hlog.Errorf("Failed to add chart upload context, %v", err)
-		}*/
+		}
 	}
 
 	// Directly proxy to the backend
 	csarController.ProxyTraffic(csar.Ctx.ResponseWriter, csar.Ctx.Request)
+}
+
+// The func is for event based csar replication policy.
+// It will add a context for uploading request with key csar_upload, and consumed by upload response.
+func (csar *CsarRepositoryAPI) addUploadEventContext(files []csarFormFile, request *http.Request) error {
+	if len(files) == 0 {
+		return nil
+
+	}
+
+	for _, f := range files {
+		if f.formField == "csar" {
+			mFile, mHeader, err := csar.GetFile(f.formField)
+			if err != nil {
+				hlog.Errorf("failed to read file content for upload event, %v", err)
+				return err
+			}
+			var Buf bytes.Buffer
+			_, err = io.Copy(&Buf, mFile)
+			if err != nil {
+				hlog.Errorf("failed to copy file content for upload event, %v", err)
+				return err
+			}
+
+			extInfo := make(map[string]interface{})
+			extInfo["operator"] = csar.SecurityCtx.GetUsername()
+			extInfo["projectName"] = csar.namespace
+			extInfo["csarName"] = mHeader.Filename
+
+			var public bool
+
+			project, err := csar.ProjectCtl.Get(csar.Context(), csar.namespace)
+			if err != nil {
+				hlog.Errorf("failed to check the public of project %s: %v", csar.namespace, err)
+				public = false
+			} else {
+				public = project.IsPublic()
+			}
+
+			e := &rep_event.Event{
+				Type: rep_event.EventTypeCsarUpload,
+				Resource: &model.Resource{
+					Type: model.ResourceTypeCsar,
+					Metadata: &model.ResourceMetadata{
+						Repository: &model.Repository{
+							Name: fmt.Sprintf("%s/%s", csar.namespace, mHeader.Filename),
+							Metadata: map[string]interface{}{
+								"public": strconv.FormatBool(public),
+							},
+						},
+						Artifacts: []*model.Artifact{
+							{
+								Tags: []string{f.version},
+							},
+						},
+					},
+					ExtendedInfo: extInfo,
+				},
+			}
+			*request = *(request.WithContext(context.WithValue(request.Context(), common.CsarUploadCtxKey, e)))
+			break
+		}
+	}
+	return nil
 }
 
 func (csar *CsarRepositoryAPI) Get() {
@@ -202,6 +286,19 @@ func (csar *CsarRepositoryAPI) Delete() {
 	csarController.ProxyTraffic(csar.Ctx.ResponseWriter, csar.Ctx.Request)
 }
 
+func (csar *CsarRepositoryAPI) addDeleteCsarEventContext(fileName, namespace string, request *http.Request) {
+	event := &metadata.CsarDeleteMetaData{
+		CsarMetaData: metadata.CsarMetaData{
+			ProjectName: namespace,
+			CsarName:    fileName,
+			//Versions:    []string{version},
+			OccurAt:  time.Now(),
+			Operator: csar.SecurityCtx.GetUsername(),
+		},
+	}
+	*request = *(request.WithContext(context.WithValue(request.Context(), common.CsarDeleteCtxKey, event)))
+}
+
 func (csar *CsarRepositoryAPI) Download() {
 	hlog.Infof("get request from download api")
 	// Check access
@@ -213,11 +310,28 @@ func (csar *CsarRepositoryAPI) Download() {
 	if !csar.requireAccess(rbac.ActionRead, rbac.ResourceCsar) {
 		return
 	}
+
+	csarName := csar.GetString(":csar")
+	// Add hook event to request context
+	csar.addDownloadCsarEventContext(csarName, csar.namespace, csar.Ctx.Request)
 	// Directly proxy to the backend
 	csarController.ProxyTraffic(csar.Ctx.ResponseWriter, csar.Ctx.Request)
 }
 
-func (csar *CsarRepositoryAPI) rewriteFileContent(files []formFile, request *http.Request) error {
+func (csar *CsarRepositoryAPI) addDownloadCsarEventContext(fileName, namespace string, request *http.Request) {
+	event := &metadata.CsarDownloadMetaData{
+		CsarMetaData: metadata.CsarMetaData{
+			ProjectName: namespace,
+			CsarName:    fileName,
+			//Versions:    []string{version},
+			OccurAt:  time.Now(),
+			Operator: csar.SecurityCtx.GetUsername(),
+		},
+	}
+	*request = *(request.WithContext(context.WithValue(request.Context(), common.CsarDownloadCtxKey, event)))
+}
+
+func (csar *CsarRepositoryAPI) rewriteFileContent(files []csarFormFile, request *http.Request) error {
 	if len(files) == 0 {
 		return nil // no files, early return
 	}

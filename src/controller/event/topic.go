@@ -325,14 +325,14 @@ type CsarEvent struct {
 	EventType   string
 	ProjectName string
 	CsarName    string
-	Versions    []string
-	OccurAt     time.Time
-	Operator    string
+	//Versions    []string
+	OccurAt  time.Time
+	Operator string
 }
 
 func (c *CsarEvent) String() string {
-	return fmt.Sprintf("ProjectName-%s ChartName-%s Versions-%s Operator-%s OccurAt-%s",
-		c.ProjectName, c.CsarName, c.Versions, c.Operator, c.OccurAt.Format("2006-01-02 15:04:05"))
+	return fmt.Sprintf("ProjectName-%s ChartName-%s  Operator-%s OccurAt-%s",
+		c.ProjectName, c.CsarName, c.Operator, c.OccurAt.Format("2006-01-02 15:04:05"))
 }
 
 // QuotaEvent is project quota related event data to publish
