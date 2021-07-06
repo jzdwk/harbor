@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"github.com/goharbor/harbor/src/controller/event/handler/webhook/csar"
 
 	"github.com/goharbor/harbor/src/controller/event"
 	"github.com/goharbor/harbor/src/controller/event/handler/auditlog"
@@ -25,9 +26,15 @@ func init() {
 	notifier.Subscribe(event.TopicPushArtifact, &artifact.Handler{})
 	notifier.Subscribe(event.TopicPullArtifact, &artifact.Handler{})
 	notifier.Subscribe(event.TopicDeleteArtifact, &artifact.Handler{})
+
 	notifier.Subscribe(event.TopicUploadChart, &chart.Handler{Context: orm.Context})
 	notifier.Subscribe(event.TopicDeleteChart, &chart.Handler{Context: orm.Context})
 	notifier.Subscribe(event.TopicDownloadChart, &chart.Handler{Context: orm.Context})
+	//csar add
+	notifier.Subscribe(event.TopicUploadCsar, &csar.Handler{Context: orm.Context})
+	notifier.Subscribe(event.TopicDeleteCsar, &csar.Handler{Context: orm.Context})
+	notifier.Subscribe(event.TopicDownloadCsar, &csar.Handler{Context: orm.Context})
+
 	notifier.Subscribe(event.TopicQuotaExceed, &quota.Handler{})
 	notifier.Subscribe(event.TopicQuotaWarning, &quota.Handler{})
 	notifier.Subscribe(event.TopicScanningFailed, &scan.Handler{})

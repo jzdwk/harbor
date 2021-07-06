@@ -40,11 +40,16 @@ const (
 	TopicScanningFailed    = "SCANNING_FAILED"
 	TopicScanningCompleted = "SCANNING_COMPLETED"
 	// QuotaExceedTopic is topic for quota warning event, the usage reaches the warning bar of limitation, like 85%
-	TopicQuotaWarning    = "QUOTA_WARNING"
-	TopicQuotaExceed     = "QUOTA_EXCEED"
-	TopicUploadChart     = "UPLOAD_CHART"
-	TopicDownloadChart   = "DOWNLOAD_CHART"
-	TopicDeleteChart     = "DELETE_CHART"
+	TopicQuotaWarning  = "QUOTA_WARNING"
+	TopicQuotaExceed   = "QUOTA_EXCEED"
+	TopicUploadChart   = "UPLOAD_CHART"
+	TopicDownloadChart = "DOWNLOAD_CHART"
+	TopicDeleteChart   = "DELETE_CHART"
+	//csar event key
+	TopicUploadCsar   = "UPLOAD_CSAR"
+	TopicDownloadCsar = "DOWNLOAD_CSAR"
+	TopicDeleteCsar   = "DELETE_CSAR"
+
 	TopicReplication     = "REPLICATION"
 	TopicArtifactLabeled = "ARTIFACT_LABELED"
 	TopicTagRetention    = "TAG_RETENTION"
@@ -313,6 +318,21 @@ type ChartEvent struct {
 func (c *ChartEvent) String() string {
 	return fmt.Sprintf("ProjectName-%s ChartName-%s Versions-%s Operator-%s OccurAt-%s",
 		c.ProjectName, c.ChartName, c.Versions, c.Operator, c.OccurAt.Format("2006-01-02 15:04:05"))
+}
+
+// Csar Event is csar related event data to publish
+type CsarEvent struct {
+	EventType   string
+	ProjectName string
+	CsarName    string
+	Versions    []string
+	OccurAt     time.Time
+	Operator    string
+}
+
+func (c *CsarEvent) String() string {
+	return fmt.Sprintf("ProjectName-%s ChartName-%s Versions-%s Operator-%s OccurAt-%s",
+		c.ProjectName, c.CsarName, c.Versions, c.Operator, c.OccurAt.Format("2006-01-02 15:04:05"))
 }
 
 // QuotaEvent is project quota related event data to publish
