@@ -168,6 +168,7 @@ func (csar *CsarRepositoryAPI) Upload() {
 			return
 		}
 		//add web hook event if necessary
+		hlog.Info("add csar web hook to request context")
 		if err := csar.addUploadEventContext(formFiles, csar.Ctx.Request); err != nil {
 			hlog.Errorf("Failed to add chart upload context, %v", err)
 		}
@@ -235,6 +236,7 @@ func (csar *CsarRepositoryAPI) addUploadEventContext(files []csarFormFile, reque
 				},
 			}
 			*request = *(request.WithContext(context.WithValue(request.Context(), common.CsarUploadCtxKey, e)))
+			hlog.Infof("add csar upload event to request context success")
 			break
 		}
 	}
@@ -272,6 +274,7 @@ func (csar *CsarRepositoryAPI) List() {
 }
 
 func (csar *CsarRepositoryAPI) Delete() {
+	csarName := csar.GetString(":csar")
 	hlog.Infof("get request from delete api")
 	// Check access
 	if !csar.SecurityCtx.IsAuthenticated() {
@@ -282,6 +285,7 @@ func (csar *CsarRepositoryAPI) Delete() {
 	if !csar.requireAccess(rbac.ActionDelete, rbac.ResourceCsar) {
 		return
 	}
+	csar.addDeleteCsarEventContext(csarName, csar.namespace, csar.Ctx.Request)
 	// Directly proxy to the backend
 	csarController.ProxyTraffic(csar.Ctx.ResponseWriter, csar.Ctx.Request)
 }

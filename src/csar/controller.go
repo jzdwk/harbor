@@ -127,6 +127,7 @@ func modifyResponse(res *http.Response) error {
 	if res.StatusCode == http.StatusCreated {
 		// 201 and has csar_upload_event context
 		// means this response is for uploading chart success.
+		hlog.Infof("create csar success, starting web hook  ")
 		csarUploadEvent := res.Request.Context().Value(common.CsarUploadCtxKey)
 		e, ok := csarUploadEvent.(*rep_event.Event)
 		if !ok {
@@ -165,6 +166,7 @@ func modifyResponse(res *http.Response) error {
 
 	// Process downloading chart success webhook event
 	if res.StatusCode == http.StatusOK {
+		hlog.Infof("download csar success, starting web hook  ")
 		csarDownloadEvent := res.Request.Context().Value(common.CsarDownloadCtxKey)
 		eventMetaData, ok := csarDownloadEvent.(*metadata.CsarDownloadMetaData)
 		if ok && eventMetaData != nil {
@@ -181,6 +183,7 @@ func modifyResponse(res *http.Response) error {
 	}
 	//process delete csar succuss webhook event
 	if res.StatusCode == http.StatusNoContent {
+		hlog.Infof("delete csar success, starting web hook  ")
 		csarDeleteEvent := res.Request.Context().Value(common.CsarDeleteCtxKey)
 		eventMetaData, ok := csarDeleteEvent.(*metadata.CsarDeleteMetaData)
 		if ok && eventMetaData != nil {
