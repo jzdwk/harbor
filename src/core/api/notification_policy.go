@@ -386,6 +386,10 @@ func initSupportedEvents() map[string]struct{} {
 		event.TopicScanningCompleted,
 		event.TopicReplication,
 		event.TopicTagRetention,
+		//add csar
+		event.TopicDownloadCsar,
+		event.TopicDeleteCsar,
+		event.TopicUploadCsar,
 	}
 
 	var supportedEventTypes = make(map[string]struct{})
